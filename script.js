@@ -17,7 +17,6 @@ function addTask() {
     alert('Please enter a task.'); // Dodajemo validaciju da polje za unos ne bude prazno
     return;
   }
-
   const taskItem = createTaskElement(taskText);
   taskList.appendChild(taskItem);
 
