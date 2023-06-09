@@ -9,15 +9,15 @@ addButton.addEventListener('click', addTask);
 // Funkcija za dodavanje novog zadatka
 function addTask() {
   const taskText = taskInput.value;
-  
+
   if (taskText.trim() === '') {
     alert('Please enter a task.'); // Dodajemo validaciju da polje za unos ne bude prazno
     return;
   }
-  
+
   const taskItem = document.createElement('li');
   taskItem.textContent = taskText;
   taskList.appendChild(taskItem);
-  
+
   taskInput.value = ''; // Resetujemo polje za unos
 }
