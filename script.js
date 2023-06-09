@@ -5,6 +5,7 @@ const taskList = document.getElementById('taskList');
 
 // Dodajemo event listener na dugme za dodavanje zadatka
 addButton.addEventListener('click', addTask);
+
 // Funkcija za dodavanje novog zadatka
 function addTask() {
   const taskText = taskInput.value;
@@ -59,4 +60,3 @@ function editTask(taskItem) {
     taskItem.textContent = newTaskText;
   }
 }
-
