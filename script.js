@@ -3,11 +3,14 @@ const taskInput = document.getElementById('taskInput');
 const addButton = document.getElementById('addButton');
 const taskList = document.getElementById('taskList');
 
+// Kreiramo prazan objekat koji će sadržati zadatke
+let tasks = [];
+
 // Dodajemo event listener na dugme za dodavanje zadatka
 addButton.addEventListener('click', addTask);
 
-// Dohvatimo zadatke iz baze podataka prilikom učitavanja stranice
-window.addEventListener('load', getTasks);
+// Dohvatimo zadatke iz localStorage prilikom učitavanja stranice
+window.addEventListener('load', getTasksFromLocalStorage);
 
 // Funkcija za dodavanje novog zadatka
 function addTask() {
@@ -17,11 +20,12 @@ function addTask() {
     alert('Please enter a task.'); // Dodajemo validaciju da polje za unos ne bude prazno
     return;
   }
+
   const taskItem = createTaskElement(taskText);
   taskList.appendChild(taskItem);
 
-  saveTaskToDatabase(taskText); // Čuvamo zadatak u bazi podataka
-  saveTaskToLocalStorage(taskText); // Čuvamo zadatak u localStorage
+  tasks.push(taskText); // Dodajemo novi zadatak u niz
+  saveTasksToLocalStorage(); // Čuvamo zadatke u localStorage
 
   taskInput.value = ''; // Resetujemo polje za unos
 }
@@ -54,11 +58,14 @@ function deleteTask(event) {
   const taskItem = event.target.parentNode;
   const taskText = taskItem.firstChild.textContent;
 
-  deleteTaskFromDatabase(taskText); // Poziv funkcije za brisanje iz baze podataka
+  const taskIndex = tasks.indexOf(taskText); // Pronalazimo indeks zadatka u nizu
+
+  if (taskIndex !== -1) {
+    tasks.splice(taskIndex, 1); // Uklanjamo zadatak iz niza
+    saveTasksToLocalStorage(); // Čuvamo ažurirane zadatke u localStorage
+  }
 
   taskList.removeChild(taskItem);
-
-  removeTaskFromLocalStorage(taskText); // Uklonite zadatak iz localStorage
 }
 
 // Funkcija za uređivanje zadatka
@@ -69,7 +76,13 @@ function editTask(event) {
 
   if (editedTask !== null && editedTask.trim() !== '') {
     taskItem.firstChild.textContent = editedTask;
-    updateTaskInDatabase(taskText, editedTask); // Ažuriramo zadatak u bazi podataka
+
+    const taskIndex = tasks.indexOf(taskText); // Pronalazimo indeks zadatka u nizu
+
+    if (taskIndex !== -1) {
+      tasks[taskIndex] = editedTask; // Ažuriramo zadatak u nizu
+      saveTasksToLocalStorage(); // Čuvamo ažurirane zadatke u localStorage
+    }
   }
 }
 
@@ -79,86 +92,17 @@ function completeTask(event) {
   taskItem.classList.toggle('completed');
 }
 
-// Funkcija za čuvanje zadatka u bazi podataka
-function saveTaskToDatabase(taskText) {
-  fetch('/add_task', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ task: taskText })
-  })
-    .then(response => response.json())
-    .then(data => console.log(data))
-    .catch(error => console.log(error));
-}
-
-// Funkcija za ažuriranje zadatka u bazi podataka
-function updateTaskInDatabase(oldTaskText, newTaskText) {
-  fetch('/update_task', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ oldTask: oldTaskText, newTask: newTaskText })
-  })
-    .then(response => response.json())
-    .then(data => console.log(data))
-    .catch(error => console.log(error));
-}
-
-// Funkcija za uklanjanje zadatka iz localStorage
-function removeTaskFromLocalStorage(taskText) {
-  let tasks = localStorage.getItem('tasks');
-
-  if (tasks) {
-    tasks = JSON.parse(tasks);
-
-    // Pronađite indeks zadatka u nizu
-    const taskIndex = tasks.indexOf(taskText);
-
-    // Uklonite zadati zadatak iz niza
-    if (taskIndex !== -1) {
-      tasks.splice(taskIndex, 1);
-      localStorage.setItem('tasks', JSON.stringify(tasks));
-    }
-  }
-}
-
-// Funkcija za brisanje zadatka iz baze podataka
-function deleteTaskFromDatabase(taskText) {
-  fetch('/delete_task', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ task: taskText })
-  })
-    .then(response => response.json())
-    .then(data => console.log(data))
-    .catch(error => console.log(error));
-}
-
 // Funkcija za čuvanje zadatka u localStorage
-function saveTaskToLocalStorage(taskText) {
-  let tasks = localStorage.getItem('tasks');
-
-  if (tasks) {
-    tasks = JSON.parse(tasks);
-  } else {
-    tasks = [];
-  }
-
-  tasks.push(taskText);
+function saveTasksToLocalStorage() {
   localStorage.setItem('tasks', JSON.stringify(tasks));
 }
 
 // Funkcija za dohvat svih zadatka iz localStorage
-function getTasks() {
-  let tasks = localStorage.getItem('tasks');
+function getTasksFromLocalStorage() {
+  const storedTasks = localStorage.getItem('tasks');
 
-  if (tasks) {
-    tasks = JSON.parse(tasks);
+  if (storedTasks) {
+    tasks = JSON.parse(storedTasks);
 
     tasks.forEach(task => {
       const taskItem = createTaskElement(task);
